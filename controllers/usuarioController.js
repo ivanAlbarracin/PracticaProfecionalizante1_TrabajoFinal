@@ -32,7 +32,6 @@ const update = async(req, res) => {
         if (req.file) {
             avatarPath = `uploads/avatars/${req.file.filename}`
         }
-        //console.log(avatarPath)
 
         // Buscar el usuario por id
         const usuario = await Usuario.findByPk(id);
@@ -41,9 +40,18 @@ const update = async(req, res) => {
         }
 
         // Actualizar los campos
-        usuario.nombre = nombre;
+        if (nombre) {
+            usuario.nombre = nombre;
+        }
+        
+        if (nickname) {
         usuario.nickname = nickname;
-        usuario.mail = mail;
+        }
+
+        if (mail) {
+            usuario.mail = mail;
+        }
+
         if (avatarPath) {
             usuario.avatar = avatarPath; // Guardar la ruta del avatar
         }
@@ -53,7 +61,7 @@ const update = async(req, res) => {
             usuario.password = password;
         }
 
-        await usuario.save(); // Sequelize activará el hook `beforeUpdate` si es necesario
+        await usuario.save(); // Sequelize activará el hook beforeUpdate si es necesario
 
         res.status(200).send(usuario);
     } catch (error) {
@@ -100,7 +108,7 @@ const login = async(req, res) => {
         //1 - Constatar que existe una cuenta con ese mail
         const usuario = await Usuario.findOne({ where: { mail } });
         if (!usuario) {
-            return res.status(404).send({ message: "Usuario no encontrada" });
+            return res.status(404).send({ message: "Usuario no encontrado" });
         }
         //2 - Verificar password
         const isMatch = await bcrypt.compare(password, usuario.password);

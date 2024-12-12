@@ -75,39 +75,50 @@ const update_post = async(req, res) => {
     }
 };
 
-const onePost = async(req, res) => {
-    const id_usuario_login = req.user.id;
-    const idPost= req.query.id
-
-    const siguiendo = await db.Usuario.findByPk(id_usuario_login, {
-        include: [{
-            model: db.Usuario,
-            as: 'seguidos', // Usa la relación "seguidos"
-            attributes: ['id'],
-            through: { 
-                attributes:  [] 
-            }
-        }, ],
-    });
+const onePost = async (req, res) => {
+    const id_usuario_login = req.user.id; // ID del usuario actualmente logueado
+    const idPost = req.query.id; // ID del post que se quiere obtener
 
     try {
+        
+        const siguiendo = await db.Usuario.findByPk(id_usuario_login, {
+            include: [{
+                model: db.Usuario,
+                as: 'seguidos', 
+                attributes: ['id'],
+                through: { 
+                    attributes: [] 
+                }
+            }]
+        });
+
+        if (!siguiendo) {
+            return res.status(404).send({ message: 'Usuario no encontrado' });
+        }
+
         const post = await Post.findByPk(idPost);
-        let encontrado= false;
-        for (let i=0;i<siguiendo.seguidos.length;i++){
-            if(post.id_usuario== siguiendo.seguidos[i].id){
-                encontrado = true
+
+        if (!post) {
+            return res.status(404).send({ message: 'Post no encontrado' });
+        }
+
+        let encontrado = false;
+        for (let i = 0; i < siguiendo.seguidos.length; i++) {
+            if (post.id_usuario == siguiendo.seguidos[i].id) {
+                encontrado = true;
+                break; 
             }
         }
-        if (id_usuario_login == post.id_usuario||encontrado==true) {
-            res.status(200).send(post);
         
-        }else {
-            res.status(404).send({ message: "No se puede mostrar este post" });
+        if (id_usuario_login == post.id_usuario || encontrado) {
+            res.status(200).send(post);
+        } else {
+            res.status(403).send({ message: "No se puede mostrar este post" });
         }
     } catch (error) {
-        res.status(500).send({ message: "Error interno del server" });
+        res.status(500).send({ message: "Error interno del servidor", error: error.message });
     }
-}
+};
 
 
 const userPost = async(req, res) => {

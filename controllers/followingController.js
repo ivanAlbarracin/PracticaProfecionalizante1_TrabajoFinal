@@ -130,8 +130,23 @@ const listMutualFollowing = async(req, res) => {
             return res.status(404).send({ error: 'No se encontraron Usuarios' });
         }
 
-        // Filtrar usuarios que están en ambas listas (seguidos y seguidores)
-        const mutuals = usuario.seguidos.filter(seg => usuario.seguidores.some(seguidor => seguidor.id === seg.id));
+        let mutuals = []; // Inicializa un array vacío para almacenar los resultados
+
+        // Recorre cada usuario seguido
+        for (let i = 0; i < usuario.seguidos.length; i++) {
+            let seguido = usuario.seguidos[i];
+
+            // Recorre cada seguidor
+            for (let j = 0; j < usuario.seguidores.length; j++) {
+                let seguidor = usuario.seguidores[j];
+
+                // Compara los IDs
+                if (seguido.id === seguidor.id) {
+                    mutuals.push(seguido); // Si los IDs coinciden, agrega el seguido a mutuals
+                     break; // Termina el bucle interno ya que no necesitamos más comparaciones para este seguido
+                }
+            }
+        }
         
         res.status(200).send(mutuals); // Enviar solo los usuarios mutuos
     } catch (error) {
